@@ -1,0 +1,83 @@
+<?php
+	$tipo=$_GET['tipo'];
+	$mysqli = new mysqli("localhost", "renan", "hacker", "apae");
+	$arquivo=fopen("../modulosbd/$tipo.txt","r");
+	$linha=fgets($arquivo);
+	$linha=explode(",",$linha);	
+	 array_pop($linha);
+	if($tipo == "usuario"){
+	 	array_pop($linha);
+ 		array_pop($linha);
+		var_dump($linha);
+	}	
+?>
+
+	 <?php
+	$sql="SELECT * FROM `$tipo`";
+	if ($resultado = $mysqli->query($sql)) {
+		#echo '<script type="text/javascript">alert("Sql executada!");</script>';
+		$cont=0;
+		while ($exibe = mysqlI_fetch_assoc($resultado) ) { // Obtém os dados da linha atual e avança para o próximo registro      
+			foreach($linha as $coluna){
+				$valor=utf8_encode($exibe[$coluna]);
+	 			if($linha[0] && $coluna == "NOME"){
+					 $nome=utf8_encode($exibe[$coluna]); 			
+				}
+				echo "<th><input onchange='editar(this.name,this.value);' name='$nome,$coluna,$tipo' size=18 value='$valor'></th>";
+			}
+			$cont+=1;
+			echo "<th><input onclick='apagar(this.name)' name='$nome,$tipo' size=5  value='apagar'</th></tr>";
+		}
+	    $resultado->close();
+	}
+	?>
+
+
+	 <tr>
+		<?php
+		foreach($linha as $coluna){
+			echo "<th class='titulo'>".$coluna."</th>";
+		}
+		?>
+
+		<?php
+		$usuario=$_POST['usuario'];
+		$senha=$_POST['senha'];
+		$mysqli = new mysqli("localhost", "renan", "hacker", "apae");
+		$sql="SELECT * FROM usuarios;";
+		if ($resultado = $mysqli->query($sql)){
+			   $user = mysqlI_fetch_assoc($resultado);
+			  if($usuario == $user["LOGIN"] && $senha == $user["SENHA"]){
+				setcookie("usuario", $usuario, time() + 60);	
+				setcookie("senha", $senha, time() + 60);	
+				echo '<form action="../index.php" method="post" id="formularioLogar">
+						  <br class="linha">Usuario: <input name="user" value="renan"></br>
+						  <br class="linha"><input style="display: none;" name="status" value="true"</br>
+					 </form>
+					 <br><button type="submit" form="formularioLogar">Confirmar </button>';
+							
+			 }else{	
+				if($usuario == ""){
+					echo"<script type='text/javascript'>alert('usuario e/ou senha errados!')';</script>";
+				}
+				echo '<form action="../consultas/logar.php" method="post" id="formularioLogar">
+						  <br class="linha">Login <input name="usuario"></br>
+						  <br class="linha">Senha <input name="senha"></br>
+					 </form>
+					 <br><button type="submit" form="formularioLogar"> Enviar </button>';
+			}
+		} else {
+			echo "<br>Erro ".$mysqli->error;
+		}
+		$mysqli->close();
+		?>
+
+	<?php
+		$status=$_POST['status'];
+		$log=date('d/m/Y \à\s H:i:s');
+		if($status == true){
+			echo "<br class='linha'>Usuario:$user </br><br class='linha'>Status: logado! </br><br class='linha'>Acesso em: $log</br><br class='linha'><a  style='color: black; text-decoration: none; background-color: white;' href='../consultas/logar.php'>Sair</a></br>";
+		}else{
+			echo"<script type='text/javascript'>window.location.href='../consultas/logar.php';</script>";
+		}
+	?>
